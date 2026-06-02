@@ -346,7 +346,7 @@ body {
   align-items: start;
 }
 
-.daily-page .feedback-panel,
+.daily-page .daily-record-panel,
 .archive-page .history-panel,
 .archive-page .archive-tools-panel {
   grid-column: 1 / -1;
@@ -382,7 +382,7 @@ body {
   .main-page .tasks-panel,
   .main-page .plans-panel,
   .archive-page .stats-panel,
-  .daily-page .feedback-panel,
+  .daily-page .daily-record-panel,
   .archive-page .growth-panel,
   .archive-page .history-panel,
   .archive-page .archive-tools-panel {
@@ -973,6 +973,10 @@ textarea {
   font-size: 0.82rem;
   color: #6b5d4a;
   margin: 0;
+}
+
+#dailyRecordHost {
+  min-height: 3rem;
 }
 
 .panel-head .btn.ghost {

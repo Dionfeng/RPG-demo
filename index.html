@@ -45,7 +45,7 @@
     </button>
     <button type="button" class="app-nav-btn" data-page-target="daily" aria-pressed="false">
       <span>每日记录</span>
-      <small>签到 · 问卷 · 反馈</small>
+      <small>签到 · 每日记录</small>
     </button>
     <button type="button" class="app-nav-btn" data-page-target="archive" aria-pressed="false">
       <span>角色档案</span>
@@ -104,44 +104,37 @@
         <ul class="checkin-milestones" id="checkinMilestones"></ul>
       </section>
 
-      <section class="panel questionnaire-panel" aria-labelledby="questTitle">
+      <section class="panel daily-record-panel" aria-labelledby="dailyRecordTitle">
         <div class="panel-head">
-          <h2 id="questTitle">动态问卷</h2>
+          <h2 id="dailyRecordTitle">每日记录</h2>
           <span class="quest-badge" id="questBadge"></span>
         </div>
-        <p class="hint" id="questHint">根据你的回答微调数值。每日 3 题、每周 2 题，答完即止。</p>
-        <div id="periodicQuestions"></div>
-        <div class="actions" id="questActions" hidden>
-          <button type="button" class="btn primary" id="btnSubmitQuestions">提交问卷并更新数值</button>
-          <button type="button" class="btn ghost" id="btnExitQuestions">退出，不更新数值</button>
-        </div>
-        <p class="quest-done" id="questAllDone" hidden>今日/本周问卷已全部完成，明天或下周会刷新新题。</p>
-      </section>
+        <p class="hint" id="dailyRecordHint">按照引导完成今日记录：点选题目会自动进入下一题。</p>
+        <p class="quest-done" id="questAllDone" hidden></p>
+        <div id="dailyRecordHost"></div>
 
-      <section class="panel feedback-panel" aria-labelledby="feedbackTitle">
-        <h2 id="feedbackTitle">今日反馈</h2>
-        <p class="hint">系统会根据你的记录缓慢调整数值，不是即时打分，而是贴近你对自己的真实感受。</p>
-
-        <fieldset class="mood-field">
+        <fieldset class="mood-field" id="dailyMoodField" hidden>
           <legend>整体状态</legend>
           <div class="mood-scale" id="moodScale" role="radiogroup" aria-label="今日整体状态"></div>
         </fieldset>
 
-        <fieldset class="tags-field">
+        <fieldset class="tags-field" id="dailyTagsField" hidden>
           <legend>今天发生了什么？（可多选）</legend>
           <div class="tag-grid" id="eventTags"></div>
         </fieldset>
 
-        <fieldset class="tune-field">
+        <fieldset class="tune-field" id="dailyTuneField" hidden>
           <legend>我觉得这些属性今天…（可选，拖动即反馈）</legend>
           <div class="tune-list" id="tuneSliders"></div>
         </fieldset>
 
-        <label class="note-label" for="dailyNote">一句话备注</label>
-        <textarea id="dailyNote" rows="2" placeholder="例：熬夜了但完成了重要的事…"></textarea>
+        <div id="dailyNoteWrap" hidden>
+          <label class="note-label" for="dailyNote">一句话备注</label>
+          <textarea id="dailyNote" rows="2" placeholder="例：熬夜了但完成了重要的事…"></textarea>
+        </div>
 
         <div class="actions">
-          <button type="button" class="btn primary" id="btnSubmit">记录并更新数值</button>
+          <button type="button" class="btn primary" id="btnDailyContinue" hidden>继续</button>
           <button type="button" class="btn ghost" id="btnUndo" disabled>撤销上次记录</button>
         </div>
 
@@ -225,7 +218,6 @@
       <menu class="dialog-actions onboard-actions">
         <button type="button" class="btn ghost" id="btnOnboardExit">退出，暂不设定基准</button>
         <button type="button" class="btn ghost" id="btnOnboardBack" disabled>上一题</button>
-        <button type="button" class="btn primary" id="btnOnboardNext" disabled>下一题</button>
       </menu>
     </form>
   </dialog>
