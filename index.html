@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>地球Online：人生RPG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="hero">
+    <div class="hero-top">
+      <div class="hero-brand" aria-label="地球Online：人生RPG">
+        <p class="hero-brand-main">地球<span class="hero-brand-latin">Online</span></p>
+        <p class="hero-brand-sub">人生RPG</p>
+      </div>
+      <button type="button" class="btn ghost btn-account" id="btnAccount" hidden>账号</button>
+    </div>
+    <p class="hero-player-label">当前角色</p>
+    <h1 class="hero-player" id="playerName">旅人</h1>
+    <p class="account-line" id="accountLine" hidden></p>
+    <div class="meta-row">
+      <span class="level-badge">Lv.<strong id="level">1</strong></span>
+      <div class="xp-wrap">
+        <div class="xp-bar" id="xpBar" style="width: 0%"></div>
+      </div>
+      <span class="xp-label" id="xpLabel">0 / 100 XP</span>
+    </div>
+    <p class="subtitle" id="lastCheckIn">尚未记录今日状态</p>
+    <p class="app-clock" id="appClock">App 日期 -- · 04:00 刷新</p>
+    <p class="guest-banner" id="guestBanner" hidden>
+      未登录，仅可浏览界面。登录后才会保存并更新数值。
+      <button type="button" class="btn ghost" id="btnGuestLogin">去登录</button>
+    </p>
+  </header>
+
+  <nav class="app-nav" aria-label="应用导航">
+    <button type="button" class="app-nav-btn is-active" data-page-target="main" aria-pressed="true">
+      <span>今日冒险</span>
+      <small>告示板 · 行路志</small>
+    </button>
+    <button type="button" class="app-nav-btn" data-page-target="daily" aria-pressed="false">
+      <span>每日记录</span>
+      <small>签到 · 问卷 · 反馈</small>
+    </button>
+    <button type="button" class="app-nav-btn" data-page-target="archive" aria-pressed="false">
+      <span>角色档案</span>
+      <small>属性 · 等级 · 设置</small>
+    </button>
+  </nav>
+
+  <main class="layout">
+    <div class="app-page main-page is-active" id="mainPage" data-page="main">
+      <section class="panel tasks-panel" aria-labelledby="tasksTitle">
+        <div class="panel-head">
+          <h2 id="tasksTitle">告示板</h2>
+          <div class="panel-head-actions">
+            <button type="button" class="btn ghost" id="btnRefreshTasks">刷新任务</button>
+            <span class="quest-badge" id="taskBadge">0 / 6 已接取</span>
+          </div>
+        </div>
+        <p class="hint">旅人，你想做什么？</p>
+        <div class="task-list" id="taskList"></div>
+      </section>
+
+      <section class="panel plans-panel" aria-labelledby="plansTitle">
+        <div class="panel-head">
+          <h2 id="plansTitle">行路志</h2>
+          <button type="button" class="btn ghost" id="btnAddPlan">添加计划</button>
+        </div>
+        <p class="hint">旅人，你想坚持什么？</p>
+        <div class="plan-list" id="planList"></div>
+      </section>
+
+    </div>
+
+    <div class="app-page daily-page" id="dailyPage" data-page="daily" hidden>
+      <section class="panel checkin-panel" aria-labelledby="checkinTitle">
+        <div class="panel-head">
+          <h2 id="checkinTitle">每日签到</h2>
+          <span class="quest-badge" id="checkinStreakBadge">连续 0 天</span>
+        </div>
+        <p class="hint" id="checkinHint">每天签到一次，连续签到额外奖励 XP。断签只重置连续天数，不扣等级。</p>
+        <div class="checkin-hero">
+          <div class="checkin-stats">
+            <div>
+              <span class="checkin-stat-label">累计签到</span>
+              <strong id="checkinTotal">0</strong> 天
+            </div>
+            <div>
+              <span class="checkin-stat-label">最长连续</span>
+              <strong id="checkinMaxStreak">0</strong> 天
+            </div>
+          </div>
+          <button type="button" class="btn primary btn-checkin" id="btnCheckIn">今日签到</button>
+        </div>
+        <p class="checkin-reward" id="checkinReward" hidden></p>
+        <p class="checkin-next" id="checkinNext"></p>
+        <div class="checkin-calendar" id="checkinCalendar" aria-label="近7日签到"></div>
+        <ul class="checkin-milestones" id="checkinMilestones"></ul>
+      </section>
+
+      <section class="panel questionnaire-panel" aria-labelledby="questTitle">
+        <div class="panel-head">
+          <h2 id="questTitle">动态问卷</h2>
+          <span class="quest-badge" id="questBadge"></span>
+        </div>
+        <p class="hint" id="questHint">根据你的回答微调数值。每日 3 题、每周 2 题，答完即止。</p>
+        <div id="periodicQuestions"></div>
+        <div class="actions" id="questActions" hidden>
+          <button type="button" class="btn primary" id="btnSubmitQuestions">提交问卷并更新数值</button>
+          <button type="button" class="btn ghost" id="btnExitQuestions">退出，不更新数值</button>
+        </div>
+        <p class="quest-done" id="questAllDone" hidden>今日/本周问卷已全部完成，明天或下周会刷新新题。</p>
+      </section>
+
+      <section class="panel feedback-panel" aria-labelledby="feedbackTitle">
+        <h2 id="feedbackTitle">今日反馈</h2>
+        <p class="hint">系统会根据你的记录缓慢调整数值，不是即时打分，而是贴近你对自己的真实感受。</p>
+
+        <fieldset class="mood-field">
+          <legend>整体状态</legend>
+          <div class="mood-scale" id="moodScale" role="radiogroup" aria-label="今日整体状态"></div>
+        </fieldset>
+
+        <fieldset class="tags-field">
+          <legend>今天发生了什么？（可多选）</legend>
+          <div class="tag-grid" id="eventTags"></div>
+        </fieldset>
+
+        <fieldset class="tune-field">
+          <legend>我觉得这些属性今天…（可选，拖动即反馈）</legend>
+          <div class="tune-list" id="tuneSliders"></div>
+        </fieldset>
+
+        <label class="note-label" for="dailyNote">一句话备注</label>
+        <textarea id="dailyNote" rows="2" placeholder="例：熬夜了但完成了重要的事…"></textarea>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="btnSubmit">记录并更新数值</button>
+          <button type="button" class="btn ghost" id="btnUndo" disabled>撤销上次记录</button>
+        </div>
+
+        <div class="delta-log" id="deltaLog" hidden>
+          <h3>本次变化</h3>
+          <ul id="deltaList"></ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="app-page archive-page" id="archivePage" data-page="archive" hidden>
+      <section class="panel stats-panel" aria-labelledby="statsTitle">
+        <div class="panel-head">
+          <h2 id="statsTitle">属性面板</h2>
+          <button type="button" class="btn ghost" id="btnStartOnboarding" title="通过问卷生成个人基准" hidden>完成入门问卷</button>
+          <button type="button" class="btn ghost" id="btnRetakeOnboarding" title="重新测评你的初始状态">重新测评初始状态</button>
+          <button type="button" class="btn ghost" id="btnCalibrate" title="根据你的感受调整当前状态">调整当前状态</button>
+        </div>
+        <ul class="stat-list" id="statList"></ul>
+      </section>
+
+      <section class="panel growth-panel" aria-labelledby="growthTitle">
+        <div class="panel-head">
+          <h2 id="growthTitle">成长等级</h2>
+          <span class="quest-badge" id="streakBadge">连续 0 天</span>
+        </div>
+        <div class="growth-hero">
+          <div>
+            <span class="growth-label">总等级</span>
+            <strong id="growthLevel">Lv.1</strong>
+          </div>
+          <span id="growthTotalXp">累计 0 XP</span>
+        </div>
+        <div class="growth-xp-wrap">
+          <div class="growth-xp-bar" id="growthXpBar"></div>
+        </div>
+        <p class="hint" id="growthXpLabel">0 / 100 XP</p>
+        <div class="attribute-growth-grid" id="attributeGrowthGrid"></div>
+      </section>
+
+      <section class="panel archive-tools-panel" aria-labelledby="archiveToolsTitle">
+        <h2 id="archiveToolsTitle">档案与设置</h2>
+        <p class="hint">低频管理集中在这里。账号入口仍在页面顶部，初始状态测评和当前状态调整也可在这里完成。</p>
+        <div class="archive-actions">
+          <button type="button" class="btn ghost" id="btnArchiveOnboarding">重新测评初始状态</button>
+          <button type="button" class="btn ghost" id="btnArchiveCalibrate">调整当前状态</button>
+          <button type="button" class="btn ghost" id="btnToggleHistory" aria-expanded="false">查看成长轨迹</button>
+          <button type="button" class="btn primary" id="btnArchiveAccount">账号设置</button>
+        </div>
+      </section>
+
+      <section class="panel history-panel" id="historyPanel" aria-labelledby="historyTitle" hidden>
+        <h2 id="historyTitle">成长轨迹</h2>
+        <ol class="history-list" id="historyList"></ol>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="calibrateDialog" class="dialog">
+    <form method="dialog" id="calibrateForm">
+      <h2>调整当前状态</h2>
+      <p class="hint">拖动到你认为<strong>当前真实水平</strong>的位置。之后日常反馈会以这个状态为参考继续微调。</p>
+      <div id="calibrateSliders"></div>
+      <menu class="dialog-actions">
+        <button type="button" class="btn ghost" id="btnCancelCalibrate">取消</button>
+        <button type="submit" class="btn primary" value="default">保存当前状态</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="onboardingDialog" class="dialog dialog-wide">
+    <form id="onboardingForm">
+      <div class="onboard-progress">
+        <span id="onboardStepLabel">入门问卷 1 / 8</span>
+        <div class="onboard-bar"><div class="onboard-bar-fill" id="onboardBarFill"></div></div>
+      </div>
+      <h2 id="onboardQuestionText"></h2>
+      <p class="hint" id="onboardQuestionHint"></p>
+      <p class="hint">可随时「退出」；退出后不会生成或修改基准数值。</p>
+      <div class="onboard-options" id="onboardOptions" role="radiogroup"></div>
+      <menu class="dialog-actions onboard-actions">
+        <button type="button" class="btn ghost" id="btnOnboardExit">退出，暂不设定基准</button>
+        <button type="button" class="btn ghost" id="btnOnboardBack" disabled>上一题</button>
+        <button type="button" class="btn primary" id="btnOnboardNext" disabled>下一题</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="authDialog" class="dialog dialog-wide">
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="auth-tab is-active" data-tab="login" role="tab">登录</button>
+      <button type="button" class="auth-tab" data-tab="register" role="tab">注册</button>
+    </div>
+    <p class="hint" id="authHint">登录后，你的问卷、任务与成长数据将只属于当前账号。选择「退出」则暂不登录，不会改动任何数值。</p>
+    <p class="auth-error" id="authError" hidden></p>
+
+    <form id="loginForm" class="auth-form">
+      <label for="loginUsername">用户名</label>
+      <input type="text" id="loginUsername" autocomplete="username" maxlength="20" required />
+      <label for="loginPassword">密码</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" required />
+      <label class="remember-row">
+        <input type="checkbox" id="loginRemember" checked />
+        记住我，下次自动登录
+      </label>
+      <menu class="dialog-actions">
+        <button type="submit" class="btn primary">登录</button>
+      </menu>
+    </form>
+
+    <form id="registerForm" class="auth-form" hidden>
+      <label for="registerUsername">用户名</label>
+      <input type="text" id="registerUsername" autocomplete="username" maxlength="20" required />
+      <label for="registerPassword">密码</label>
+      <input type="password" id="registerPassword" autocomplete="new-password" minlength="4" required />
+      <label for="registerPasswordConfirm">确认密码</label>
+      <input type="password" id="registerPasswordConfirm" autocomplete="new-password" minlength="4" required />
+      <label class="remember-row">
+        <input type="checkbox" id="registerRemember" checked />
+        记住我，下次自动登录
+      </label>
+      <menu class="dialog-actions">
+        <button type="submit" class="btn primary">注册并进入</button>
+      </menu>
+    </form>
+    <menu class="dialog-actions">
+      <button type="button" class="btn ghost" id="btnAuthExit">退出，暂不登录</button>
+    </menu>
+  </dialog>
+
+  <dialog id="accountDialog" class="dialog">
+    <div class="dialog-header">
+      <h2>账号</h2>
+      <button type="button" class="dialog-close" id="btnCloseAccount" aria-label="关闭">×</button>
+    </div>
+    <p class="hint" id="accountCurrentUser"></p>
+    <menu class="dialog-actions account-actions">
+      <button type="button" class="btn ghost" id="btnSwitchAccount">切换账号</button>
+      <button type="button" class="btn primary" id="btnLogout">退出登录</button>
+    </menu>
+  </dialog>
+
+  <dialog id="planDialog" class="dialog dialog-wide">
+    <form id="planForm">
+      <h2 id="planDialogTitle">添加计划</h2>
+      <input type="hidden" id="planEditId" />
+      <label for="planTitle">计划名称</label>
+      <input type="text" id="planTitle" maxlength="40" required placeholder="例：每天阅读 30 分钟" />
+      <label for="planDescription">计划说明（可选）</label>
+      <textarea id="planDescription" rows="2" placeholder="你希望自己做到什么？"></textarea>
+      <span class="field-label" id="planStatLabel">主要关联属性（可多选）</span>
+      <div id="planStatChoices" class="plan-stat-choices" role="group" aria-labelledby="planStatLabel"></div>
+      <label for="planCadence">检查频率</label>
+      <select id="planCadence">
+        <option value="daily">每天</option>
+        <option value="weekly">每周</option>
+      </select>
+      <label for="planKeywords">关键词（可选，逗号分隔，用于自动识别备注）</label>
+      <input type="text" id="planKeywords" placeholder="例：阅读, 看书, 章节" />
+      <menu class="dialog-actions">
+        <button type="button" class="btn ghost" id="btnCancelPlan">取消</button>
+        <button type="submit" class="btn primary">保存计划</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="nameDialog" class="dialog">
+    <form method="dialog" id="nameForm">
+      <h2>你是谁？</h2>
+      <label for="nameInput">角色名</label>
+      <input type="text" id="nameInput" maxlength="24" placeholder="你的名字或代号" required />
+      <menu class="dialog-actions">
+        <button type="button" class="btn ghost" id="btnSkipName">稍后再说</button>
+        <button type="submit" class="btn primary">开始旅程</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script>
+    if (location.protocol === "file:") {
+      document.body.innerHTML =
+        '<div style="max-width:32rem;margin:4rem auto;padding:1.5rem;font-family:system-ui,sans-serif;line-height:1.6">' +
+        "<h1>无法以本地文件方式打开</h1>" +
+        "<p>本应用使用 ES Module，请通过本地 HTTP 服务访问，不要直接双击 index.html。</p>" +
+        "<p>在项目文件夹打开终端，执行：</p>" +
+        '<pre style="background:#f4f4f4;padding:0.75rem;border-radius:6px">python -m http.server 5173</pre>' +
+        "<p>然后在浏览器打开：<strong>http://localhost:5173</strong></p></div>";
+    }
+  </script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

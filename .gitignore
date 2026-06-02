@@ -1,0 +1,8 @@
+.cursor/
+.vscode/
+Thumbs.db
+Desktop.ini
+node_modules/
+.env
+.env.*
+*.log
