@@ -452,6 +452,8 @@ function bindUI() {
   });
 
   $("#btnDailyContinue").addEventListener("click", handleDailyRecordContinue);
+  $("#btnDailyBack").addEventListener("click", handleDailyRecordBack);
+  $("#btnSubmitQuestions").addEventListener("click", submitQuestionnaireAnswers);
   $("#btnUndo").addEventListener("click", () => {
     if (!canMutateStats()) return;
     if (undoLast(save)) {
@@ -802,52 +804,76 @@ function resetDailyRecordState() {
 }
 
 function buildDailyRecordSteps() {
-  const daily = getDueDailyQuestions(save).map((q) => ({ ...q, frequency: "daily", freqLabel: "每日" }));
-  const weekly = getDueWeeklyQuestions(save).map((q) => ({ ...q, frequency: "weekly", freqLabel: "每周" }));
   return [
     { type: "mood" },
     { type: "tags" },
     { type: "tune" },
     { type: "note" },
-    ...daily.map((q) => ({ type: "question", ...q })),
-    ...weekly.map((q) => ({ type: "question", ...q })),
   ];
 }
 
 function renderDailyRecordPanel() {
+  const btnContinue = $("#btnDailyContinue");
+  const btnBack = $("#btnDailyBack");
+  const header = $("#dailyStepHeader");
   if (!isOnboardingUnlocked()) {
     $("#dailyRecordHost").innerHTML =
       "<p class='hint'>请先完成入门问卷，解锁每日记录。</p>";
-    $("#questAllDone").hidden = true;
-    $("#questBadge").textContent = "未解锁";
-    $("#btnDailyContinue").hidden = true;
+    $("#dailyRecordDone").hidden = true;
+    $("#dailyRecordBadge").textContent = "未解锁";
+    btnContinue.hidden = true;
+    btnBack.hidden = true;
+    if (header) header.hidden = true;
     hideDailyRecordBlocks();
     return;
   }
 
-  const answeredDaily = countAnsweredToday(save);
-  const answeredWeekly = countAnsweredThisWeek(save);
-  $("#questBadge").textContent = `今日 ${answeredDaily}/3 · 本周 ${answeredWeekly}/2`;
+  $("#dailyRecordBadge").textContent = hasDailyRecordToday() ? "今日已记录" : "今日可记录";
   if (hasDailyRecordToday()) {
     $("#dailyRecordHost").innerHTML = "<p class='hint'>今日记录已完成，明天 4 点后可再次记录。</p>";
-    $("#questAllDone").hidden = false;
-    $("#questAllDone").textContent = "今日已记录 ✓";
-    $("#btnDailyContinue").hidden = true;
+    $("#dailyRecordDone").hidden = false;
+    $("#dailyRecordDone").textContent = "今日已记录 ✓";
+    btnContinue.hidden = true;
+    btnBack.hidden = true;
+    if (header) header.hidden = true;
     hideDailyRecordBlocks();
     return;
   }
 
   resetDailyRecordState();
   dailyRecordSteps = buildDailyRecordSteps();
-  $("#questAllDone").hidden = true;
+  $("#dailyRecordDone").hidden = true;
   renderDailyRecordStep();
 }
 
 function hideDailyRecordBlocks() {
-  $("#dailyMoodField").hidden = true;
-  $("#dailyTagsField").hidden = true;
-  $("#dailyTuneField").hidden = true;
-  $("#dailyNoteWrap").hidden = true;
+  ["#dailyMoodField", "#dailyTagsField", "#dailyTuneField", "#dailyNoteWrap"].forEach((sel) => {
+    const el = $(sel);
+    if (!el) return;
+    el.hidden = true;
+    el.classList.remove("is-step-active");
+  });
+}
+
+function updateDailyStepHeader(step) {
+  const header = $("#dailyStepHeader");
+  const title = $("#dailyStepTitle");
+  const meta = $("#dailyStepMeta");
+  const progressFill = $("#dailyStepProgressFill");
+  if (!header || !title || !meta || !progressFill) return;
+  const total = dailyRecordSteps.length || 1;
+  const current = Math.min(total, dailyRecordStep + 1);
+  const labels = {
+    mood: { title: "整体状态", meta: "单选后自动进入下一步" },
+    tags: { title: "今日事件", meta: "可多选，选好后点击继续" },
+    tune: { title: "属性体感", meta: "滑条可选，不调也可以继续" },
+    note: { title: "一句备注", meta: "可空，写完后继续提交今日反馈" },
+  };
+  const mapped = labels[step?.type] ?? { title: "每日记录", meta: "按提示继续完成记录" };
+  title.textContent = `步骤 ${current} / ${total} · ${mapped.title}`;
+  meta.textContent = mapped.meta;
+  progressFill.style.width = `${Math.round((current / total) * 100)}%`;
+  header.hidden = false;
 }
 
 function handleDailyRecordContinue() {
@@ -859,22 +885,32 @@ function handleDailyRecordContinue() {
   }
 }
 
+function handleDailyRecordBack() {
+  if (dailyRecordStep <= 0) return;
+  dailyRecordStep -= 1;
+  renderDailyRecordStep();
+}
+
 function renderDailyRecordStep() {
   const host = $("#dailyRecordHost");
   host.innerHTML = "";
   hideDailyRecordBlocks();
   const btnContinue = $("#btnDailyContinue");
+  const btnBack = $("#btnDailyBack");
   const step = dailyRecordSteps[dailyRecordStep];
 
   if (!step) {
     submitDailyRecord();
     return;
   }
+  updateDailyStepHeader(step);
+  btnBack.hidden = dailyRecordStep === 0;
 
   if (step.type === "mood") {
     $("#dailyMoodField").hidden = false;
+    $("#dailyMoodField").classList.add("is-step-active");
     btnContinue.hidden = true;
-    $("#dailyRecordHint").textContent = "请选择整体状态，点选后自动下一步。";
+    $("#dailyRecordHint").textContent = "请先确定你今天的整体状态。";
     buildMoodScale((value) => {
       selectedMood = value;
       dailyRecordStep += 1;
@@ -885,55 +921,31 @@ function renderDailyRecordStep() {
 
   if (step.type === "tags") {
     $("#dailyTagsField").hidden = false;
+    $("#dailyTagsField").classList.add("is-step-active");
     btnContinue.hidden = false;
     btnContinue.textContent = "继续";
-    $("#dailyRecordHint").textContent = "选择今天发生的事情后，继续下一步。";
+    $("#dailyRecordHint").textContent = "选择今天发生的事情，可多选。";
     buildEventTags();
     return;
   }
 
   if (step.type === "tune") {
     $("#dailyTuneField").hidden = false;
+    $("#dailyTuneField").classList.add("is-step-active");
     btnContinue.hidden = false;
     btnContinue.textContent = "继续";
-    $("#dailyRecordHint").textContent = "如需补充属性体感，请拖动滑条。";
+    $("#dailyRecordHint").textContent = "如需补充属性体感，可拖动滑条。";
     buildTuneSliders();
     return;
   }
 
   if (step.type === "note") {
     $("#dailyNoteWrap").hidden = false;
+    $("#dailyNoteWrap").classList.add("is-step-active");
     btnContinue.hidden = false;
-    btnContinue.textContent = "进入动态题";
-    $("#dailyRecordHint").textContent = "可写一句备注，然后继续。";
+    btnContinue.textContent = "提交今日反馈";
+    $("#dailyRecordHint").textContent = "可写一句备注，然后提交今日反馈。";
     return;
-  }
-
-  if (step.type === "question") {
-    btnContinue.hidden = true;
-    host.innerHTML = `
-      <div class="quest-block">
-        <span class="quest-freq">${step.freqLabel}</span>
-        <p class="quest-text">${step.text}</p>
-        <div class="quest-options" role="radiogroup" aria-label="${step.text}"></div>
-      </div>
-    `;
-    const opts = host.querySelector(".quest-options");
-    step.options.forEach((opt) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "quest-opt";
-      btn.textContent = opt.label;
-      btn.addEventListener("click", () => {
-        pendingQuestionAnswers.set(step.id, { frequency: step.frequency, option: opt, question: step });
-        dailyRecordStep += 1;
-        renderDailyRecordStep();
-      });
-      opts.appendChild(btn);
-    });
-    $("#dailyRecordHint").textContent = `动态题 ${pendingQuestionAnswers.size + 1} / ${
-      dailyRecordSteps.filter((s) => s.type === "question").length
-    }，点选后自动下一题。`;
   }
 }
 
@@ -951,14 +963,6 @@ function submitDailyRecord() {
     eventTags: EVENT_TAGS,
   });
 
-  const dailyOpts = [];
-  const weeklyOpts = [];
-
-  for (const [, { frequency, option }] of pendingQuestionAnswers) {
-    if (frequency === "daily") dailyOpts.push(option);
-    else weeklyOpts.push(option);
-  }
-
   save.lastUndo = makeUndoSnapshot();
 
   const allApplied = [];
@@ -966,29 +970,7 @@ function submitDailyRecord() {
   allApplied.push(...feedbackApplied);
   const feedbackRewards = settleFeedbackAttributeXp(save, deltas);
   addXp(save);
-
-  if (dailyOpts.length) {
-    const deltas = mergeEffects(dailyOpts);
-    const { applied } = applyDeltas(save, deltas, DAILY_QUESTION_LEARNING_RATE);
-    allApplied.push(...applied);
-  }
-
-  if (weeklyOpts.length) {
-    const deltas = mergeEffects(weeklyOpts);
-    const { applied } = applyDeltas(save, deltas, WEEKLY_QUESTION_LEARNING_RATE);
-    allApplied.push(...applied);
-  }
-
-  for (const [qid, { frequency }] of pendingQuestionAnswers) {
-    markQuestionAnswered(save, frequency, qid);
-  }
-
-  const count = pendingQuestionAnswers.size;
-  addXp(save, XP_PER_QUESTION * count);
-
-  const mergedEffects = mergeEffects([...dailyOpts, ...weeklyOpts]);
-  const questionRewards = settleQuestionnaireAttributeXp(save, mergedEffects);
-  const allRewards = [...feedbackRewards, ...questionRewards];
+  const allRewards = [...feedbackRewards];
   const note = $("#dailyNote").value.trim();
   const planSummary = scorePlansFromActivity(
     {
@@ -996,9 +978,8 @@ function submitDailyRecord() {
       tagIds: [...selectedTags],
       tuneDeltas: { ...tuneValues },
       dailyNote: note,
-      extraEffects: mergedEffects,
     },
-    "dailyRecord"
+    "dailyFeedback"
   );
 
   const changeText =
@@ -1029,7 +1010,6 @@ function submitDailyRecord() {
   markDailyRecordToday();
 
   persistSave(save);
-  pendingQuestionAnswers.clear();
   renderAll();
 
   const deltaList = $("#deltaList");
@@ -1051,6 +1031,153 @@ function submitDailyRecord() {
     $("#btnUndo").disabled = false;
   }
   resetFeedbackForm();
+}
+
+function renderQuestionnairePanel() {
+  if (!isOnboardingUnlocked()) {
+    $("#periodicQuestions").innerHTML =
+      "<p class='hint'>请先完成入门问卷，解锁每日/每周动态问题。</p>";
+    $("#questActions").hidden = true;
+    $("#questAllDone").hidden = true;
+    $("#questBadge").textContent = "未解锁";
+    return;
+  }
+
+  const daily = getDueDailyQuestions(save);
+  const weekly = getDueWeeklyQuestions(save);
+  const all = [
+    ...daily.map((q) => ({ ...q, frequency: "daily", freqLabel: "每日" })),
+    ...weekly.map((q) => ({ ...q, frequency: "weekly", freqLabel: "每周" })),
+  ];
+
+  const answeredDaily = countAnsweredToday(save);
+  const answeredWeekly = countAnsweredThisWeek(save);
+  $("#questBadge").textContent = `今日 ${answeredDaily}/3 · 本周 ${answeredWeekly}/2`;
+  pendingQuestionAnswers.clear();
+  const container = $("#periodicQuestions");
+  container.innerHTML = "";
+
+  if (all.length === 0) {
+    $("#questActions").hidden = true;
+    $("#questAllDone").hidden = false;
+    $("#questAllDone").textContent = "今日/本周问卷已全部完成，明天或下周会刷新新题。";
+    return;
+  }
+
+  $("#questActions").hidden = false;
+  $("#questAllDone").hidden = true;
+  all.forEach((q) => {
+    const block = document.createElement("div");
+    block.className = "quest-block";
+    block.dataset.questionId = q.id;
+    block.innerHTML = `<span class="quest-freq">${q.freqLabel}</span><p class="quest-text">${q.text}</p>`;
+    const opts = document.createElement("div");
+    opts.className = "quest-options";
+    opts.setAttribute("role", "radiogroup");
+    q.options.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "quest-opt";
+      btn.textContent = opt.label;
+      btn.setAttribute("aria-checked", "false");
+      btn.addEventListener("click", () => {
+        opts.querySelectorAll(".quest-opt").forEach((b) => b.setAttribute("aria-checked", "false"));
+        btn.setAttribute("aria-checked", "true");
+        pendingQuestionAnswers.set(q.id, { frequency: q.frequency, option: opt, question: q });
+        updateQuestionnaireSubmitState(all.length);
+      });
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    container.appendChild(block);
+  });
+  updateQuestionnaireSubmitState(all.length);
+}
+
+function updateQuestionnaireSubmitState(total) {
+  const answered = pendingQuestionAnswers.size;
+  $("#btnSubmitQuestions").disabled = answered < total;
+  $("#btnSubmitQuestions").textContent =
+    answered < total ? `请完成全部题目（${answered}/${total}）` : "提交问卷并更新数值";
+}
+
+function submitQuestionnaireAnswers() {
+  if (!canMutateStats()) return;
+  const dailyOpts = [];
+  const weeklyOpts = [];
+  for (const [, { frequency, option }] of pendingQuestionAnswers) {
+    if (frequency === "daily") dailyOpts.push(option);
+    else weeklyOpts.push(option);
+  }
+  if (!dailyOpts.length && !weeklyOpts.length) return;
+
+  save.lastUndo = makeUndoSnapshot();
+  const allApplied = [];
+
+  if (dailyOpts.length) {
+    const deltas = mergeEffects(dailyOpts);
+    const { applied } = applyDeltas(save, deltas, DAILY_QUESTION_LEARNING_RATE);
+    allApplied.push(...applied);
+  }
+  if (weeklyOpts.length) {
+    const deltas = mergeEffects(weeklyOpts);
+    const { applied } = applyDeltas(save, deltas, WEEKLY_QUESTION_LEARNING_RATE);
+    allApplied.push(...applied);
+  }
+  for (const [qid, { frequency }] of pendingQuestionAnswers) {
+    markQuestionAnswered(save, frequency, qid);
+  }
+
+  const count = pendingQuestionAnswers.size;
+  addXp(save, XP_PER_QUESTION * count);
+  const mergedEffects = mergeEffects([...dailyOpts, ...weeklyOpts]);
+  const questionRewards = settleQuestionnaireAttributeXp(save, mergedEffects);
+  const planSummary = scorePlansFromActivity({ extraEffects: mergedEffects }, "questionnaire");
+
+  const changeText =
+    allApplied.length > 0
+      ? allApplied.map((a) => `${a.name} ${a.change > 0 ? "+" : ""}${a.change.toFixed(1)}`).join("，")
+      : "数值基本持平";
+  const rewardText =
+    questionRewards.length > 0 ? questionRewards.map(formatAttributeReward).join("，") : "";
+
+  save.history.unshift({
+    at: Date.now(),
+    type: "questionnaire",
+    summary: [
+      planSummary ? `计划评分 · ${planSummary}` : null,
+      rewardText ? `属性成长 · ${rewardText}` : null,
+      `今日状态 · ${changeText}`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    applied: allApplied,
+    rewards: questionRewards,
+  });
+  if (save.history.length > 50) save.history.length = 50;
+
+  persistSave(save);
+  pendingQuestionAnswers.clear();
+  renderAll();
+
+  const deltaList = $("#deltaList");
+  deltaList.innerHTML = "";
+  allApplied.forEach((a) => {
+    const li = document.createElement("li");
+    li.className = a.change > 0 ? "delta-positive" : "delta-negative";
+    li.textContent = `${a.name} ${a.change > 0 ? "+" : ""}${a.change.toFixed(1)}`;
+    deltaList.appendChild(li);
+  });
+  questionRewards.forEach((reward) => {
+    const li = document.createElement("li");
+    li.className = "delta-positive";
+    li.textContent = formatAttributeReward(reward);
+    deltaList.appendChild(li);
+  });
+  if (allApplied.length || questionRewards.length) {
+    $("#deltaLog").hidden = false;
+    $("#btnUndo").disabled = false;
+  }
 }
 
 function buildMoodScale(onPick = null) {
@@ -1569,6 +1696,7 @@ function renderAll() {
   renderPlansPanel();
   renderTaskPanel();
   renderDailyRecordPanel();
+  renderQuestionnairePanel();
   renderHistory();
   if (save.stats?.length) buildTuneSliders();
 }

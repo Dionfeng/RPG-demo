@@ -347,6 +347,7 @@ body {
 }
 
 .daily-page .daily-record-panel,
+.daily-page .questionnaire-panel,
 .archive-page .history-panel,
 .archive-page .archive-tools-panel {
   grid-column: 1 / -1;
@@ -383,6 +384,7 @@ body {
   .main-page .plans-panel,
   .archive-page .stats-panel,
   .daily-page .daily-record-panel,
+  .daily-page .questionnaire-panel,
   .archive-page .growth-panel,
   .archive-page .history-panel,
   .archive-page .archive-tools-panel {
@@ -975,8 +977,56 @@ textarea {
   margin: 0;
 }
 
+.daily-step-header {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed #c4b59a;
+  border-radius: var(--radius);
+  background: rgba(244, 234, 216, 0.7);
+}
+
+.daily-step-title {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.daily-step-meta {
+  margin: 0.18rem 0 0;
+  font-size: 0.76rem;
+  color: #6b5d4a;
+}
+
+.daily-step-progress {
+  height: 8px;
+  border: 1px solid var(--ink);
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--parchment-dim);
+}
+
+.daily-step-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--jade), var(--gold));
+  transition: width 0.2s ease;
+}
+
 #dailyRecordHost {
   min-height: 3rem;
+}
+
+#dailyRecordHost:empty {
+  min-height: 0;
+}
+
+.is-step-active {
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 0.65rem;
+  background: rgba(255, 252, 245, 0.88);
 }
 
 .panel-head .btn.ghost {

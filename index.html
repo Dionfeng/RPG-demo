@@ -107,10 +107,19 @@
       <section class="panel daily-record-panel" aria-labelledby="dailyRecordTitle">
         <div class="panel-head">
           <h2 id="dailyRecordTitle">每日记录</h2>
-          <span class="quest-badge" id="questBadge"></span>
+          <span class="quest-badge" id="dailyRecordBadge"></span>
         </div>
-        <p class="hint" id="dailyRecordHint">按照引导完成今日记录：点选题目会自动进入下一题。</p>
-        <p class="quest-done" id="questAllDone" hidden></p>
+        <p class="hint" id="dailyRecordHint">按照引导完成今日反馈，了解你今天的状态。</p>
+        <p class="quest-done" id="dailyRecordDone" hidden></p>
+        <div class="daily-step-header" id="dailyStepHeader" hidden>
+          <div>
+            <p class="daily-step-title" id="dailyStepTitle"></p>
+            <p class="daily-step-meta" id="dailyStepMeta"></p>
+          </div>
+          <div class="daily-step-progress" id="dailyStepProgress" aria-hidden="true">
+            <div class="daily-step-progress-fill" id="dailyStepProgressFill"></div>
+          </div>
+        </div>
         <div id="dailyRecordHost"></div>
 
         <fieldset class="mood-field" id="dailyMoodField" hidden>
@@ -134,6 +143,7 @@
         </div>
 
         <div class="actions">
+          <button type="button" class="btn ghost" id="btnDailyBack" hidden>上一步</button>
           <button type="button" class="btn primary" id="btnDailyContinue" hidden>继续</button>
           <button type="button" class="btn ghost" id="btnUndo" disabled>撤销上次记录</button>
         </div>
@@ -142,6 +152,19 @@
           <h3>本次变化</h3>
           <ul id="deltaList"></ul>
         </div>
+      </section>
+
+      <section class="panel questionnaire-panel" aria-labelledby="questTitle">
+        <div class="panel-head">
+          <h2 id="questTitle">动态问卷</h2>
+          <span class="quest-badge" id="questBadge"></span>
+        </div>
+        <p class="hint" id="questHint">每日 3 题 + 每周 2 题，同页作答后提交即可。</p>
+        <div id="periodicQuestions"></div>
+        <div class="actions" id="questActions" hidden>
+          <button type="button" class="btn primary" id="btnSubmitQuestions">提交问卷并更新数值</button>
+        </div>
+        <p class="quest-done" id="questAllDone" hidden>今日/本周问卷已全部完成，明天或下周会刷新新题。</p>
       </section>
     </div>
 
