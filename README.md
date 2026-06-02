@@ -19,6 +19,10 @@ http://localhost:5173
 - 账号与存档保存在**本浏览器**的 `localStorage` 中。
 - 换设备、换浏览器或清除站点数据后，存档不会自动同步。
 
+## 上传到 GitHub
+
+本地已 `git init`。首次上传请阅读 [GITHUB_SETUP.md](GITHUB_SETUP.md)，或登录后双击 `push-to-github.bat`。
+
 ## 可选：GitHub Pages
 
-仓库 Settings → Pages → 从 `main` 分支根目录部署，即可通过 `https://<用户名>.github.io/<仓库名>/` 访问。
+仓库 Settings → Pages → 从 `main` 分支根目录部署，即可通过 `https://<用户名>.github.io/earth-online-rpg/` 访问（仓库名以你创建的为准）。
